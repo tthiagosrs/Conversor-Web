@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Registros de Ponto</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            width: 200px;
+            height: 200px;
+            background: url("img/logo.png") center/contain no-repeat;
+            opacity: 0.9;
+            z-index: 1000;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 880px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 132, 0.15);
+            border-radius: 24px;
+            padding: 56px 48px;
+            box-shadow: 0 20px 60px rgba(0, 255, 132, 0.1);
+        }
+
+        .header {
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00ff84 0%, #00cc6a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(0, 255, 132, 0.2);
+            padding: 64px 40px;
+            text-align: center;
+            border-radius: 16px;
+            background: rgba(0, 255, 132, 0.02);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .upload-area:hover {
+            background: rgba(0, 255, 132, 0.04);
+            border-color: rgba(0, 255, 132, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 132, 0.1);
+        }
+
+        .upload-area.dragover {
+            background: rgba(0, 255, 132, 0.06);
+            border-color: rgba(0, 255, 132, 0.4);
+            transform: scale(1.01);
+            box-shadow: 0 0 40px rgba(0, 255, 132, 0.2);
+        }
+
+        .upload-text {
+            margin-top: 12px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 32px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-name {
+            font-size: 15px;
+            color: #00ff84;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: -0.2px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            color: #00ff84;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 20px rgba(0, 255, 132, 0.3);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .preview {
+            margin-top: 32px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 32px;
+            border-radius: 16px;
+            display: none;
+        }
+
+        .preview.active {
+            display: block;
+        }
+
+        .preview-title {
+            font-size: 14px;
+            color: #00ff84;
+            margin-bottom: 16px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .preview-content {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: "SF Mono", "Monaco", "Courier New", monospace;
+            font-size: 13px;
+            height: 280px;
+            overflow-y: auto;
+            white-space: pre;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.6;
+        }
+
+        .preview-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .preview-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .preview-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        .preview-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 32px;
+            padding: 18px;
+            background: linear-gradient(135deg, #00ff84 0%, #00cc6a 100%);
+            color: #000000;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 16px rgba(0, 255, 132, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 255, 132, 0.4);
+            background: linear-gradient(135deg, #00ff84 0%, #00e676 100%);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .success-message {
+            margin-top: 24px;
+            background: rgba(0, 255, 132, 0.05);
+            border-left: 3px solid #00ff84;
+            padding: 18px 20px;
+            border-radius: 12px;
+            color: #a8ffcb;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .success-message.active {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Conversor de Registros de Ponto</h1>
+        <p>Processamento de múltiplos arquivos .txt</p>
+    </div>
+
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-text">Clique ou arraste seus arquivos aqui</div>
+        <input type="file" id="fileInput" accept=".txt" multiple>
+    </div>
+
+    <div class="file-info" id="fileInfo">
+        <div class="file-name" id="fileName"></div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalArquivos">0</div>
+                <div class="stat-label">Arquivos</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-value" id="totalRegistros">0</div>
+                <div class="stat-label">Registros totais</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-value" id="totalPIS">0</div>
+                <div class="stat-label">PIS únicos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview" id="preview">
+        <div class="preview-title">Prévia dos primeiros registros</div>
+        <div class="preview-content" id="previewContent"></div>
+    </div>
+
+    <button class="btn" id="downloadAllBtn" disabled>
+        Baixar todos arquivos convertidos
+    </button>
+
+    <div class="success-message" id="successMessage">
+        Arquivos processados com sucesso.
+    </div>
+</div>
+
+<script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const fileInfo = document.getElementById("fileInfo");
+    const fileName = document.getElementById("fileName");
+    const preview = document.getElementById("preview");
+    const previewContent = document.getElementById("previewContent");
+    const downloadAllBtn = document.getElementById("downloadAllBtn");
+    const successMessage = document.getElementById("successMessage");
+
+    const totalArquivos = document.getElementById("totalArquivos");
+    const totalRegistros = document.getElementById("totalRegistros");
+    const totalPIS = document.getElementById("totalPIS");
+
+    let arquivosProcessados = [];
+
+    uploadArea.addEventListener("click", () => fileInput.click());
+    uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", e => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        processFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener("change", e => processFiles(e.target.files));
+
+    function processFiles(files) {
+        arquivosProcessados = [];
+        preview.classList.remove("active");
+        successMessage.classList.remove("active");
+        downloadAllBtn.disabled = true;
+
+        const lista = Array.from(files).filter(f => f.name.endsWith(".txt"));
+        if (!lista.length) return alert("Envie apenas arquivos .txt");
+
+        fileName.textContent = `${lista.length} arquivo(s) carregado(s)`;
+        fileInfo.classList.add("active");
+
+        let totalRegs = 0;
+        let pisGeral = new Set();
+        let processados = 0;
+
+        lista.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const registros = processarConteudo(e.target.result);
+
+                totalRegs += registros.length;
+                registros.forEach(r => pisGeral.add(r.pis));
+
+                arquivosProcessados.push({
+                    nomeOriginal: file.name.replace(".txt", ""),
+                    registros
+                });
+
+                if (index === 0) {
+                    previewContent.textContent = gerarPreview(registros);
+                    preview.classList.add("active");
+                }
+
+                processados++;
+                if (processados === lista.length) {
+                    totalArquivos.textContent = lista.length;
+                    totalRegistros.textContent = totalRegs;
+                    totalPIS.textContent = pisGeral.size;
+                    downloadAllBtn.disabled = false;
+                    successMessage.classList.add("active");
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    function processarConteudo(content) {
+        return content.split("\n")
+            .map(l => l.trim())
+            .filter(l => l && !l.startsWith("0000000001") && !l.startsWith("9999999999"))
+            .map(extrair)
+            .filter(Boolean);
+    }
+
+    function extrair(linha) {
+        if (linha.length < 25) return null;
+        const dados = linha.substring(10);
+        const dataStr = dados.substring(0, 8);
+        const horaStr = dados.substring(8, 12);
+        const pis = dados.substring(14, 25);
+
+        if (!/^\d+$/.test(dataStr) || !/^\d+$/.test(horaStr) || !/^\d+$/.test(pis))
+            return null;
+
+        return {
+            pis,
+            data: `${dataStr.slice(0,2)}/${dataStr.slice(2,4)}/${dataStr.slice(4,8)}`,
+            hora: `${horaStr.slice(0,2)}:${horaStr.slice(2,4)}:00`
+        };
+    }
+
+    function gerarPreview(registros) {
+        return "PIS;DATA;HORA;\n" +
+            registros.slice(0, 10)
+                     .map(r => `${r.pis};${r.data};${r.hora};`)
+                     .join("\n");
+    }
+
+    downloadAllBtn.addEventListener("click", () => {
+        arquivosProcessados.forEach(arq => {
+            const csv =
+                "PIS;DATA;HORA;\n" +
+                arq.registros.map(r =>
+                    `${r.pis};${r.data};${r.hora};`
+                ).join("\n");
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${arq.nomeOriginal}_processado.csv`;
+            link.click();
+        });
+    });
+</script>
+
+</body>
+</html>
